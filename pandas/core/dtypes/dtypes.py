@@ -2410,13 +2410,18 @@ class ArrowDtype(StorageExtensionDtype):
         try:
             pa_dtype = pa.type_for_alias(base_type)
         except ValueError as err:
-            has_parameters = re.search(r"[\[\(].*[\]\)]", base_type)
+            has_parameters = re.search(r"[\[\(<].*[\]\)>]", base_type)
             if has_parameters:
                 # Fallback to try common temporal types
                 try:
                     return cls._parse_temporal_dtype_string(base_type)
                 except (NotImplementedError, ValueError):
-                    # Fall through to raise with nice exception message below
+                    pass
+
+                # Fallback to try list types
+                try:
+                    return cls._parse_list_dtype_string(base_type)
+                except (NotImplementedError, ValueError):
                     pass
 
                 raise NotImplementedError(
@@ -2427,6 +2432,23 @@ class ArrowDtype(StorageExtensionDtype):
                 ) from err
             raise TypeError(f"'{base_type}' is not a valid pyarrow data type.") from err
         return cls(pa_dtype)
+    
+    @classmethod
+    def _parse_list_dtype_string(cls, string: str) -> ArrowDtype:
+        """
+        Construct a list ArrowDtype from string.
+        """
+        if not string.startswith("list<item: ") or not string.endswith(">"):
+            raise ValueError
+
+        inner = string[len("list<item: ") : -1]
+
+        try:
+            inner_dtype = pa.type_for_alias(inner)
+        except ValueError:
+            inner_dtype = cls.construct_from_string(f"{inner}[pyarrow]").pyarrow_dtype
+
+        return cls(pa.list_(inner_dtype))
 
     # TODO(arrow#33642): This can be removed once supported by pyarrow
     @classmethod
