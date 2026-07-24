@@ -1138,6 +1138,23 @@ class TestParquetPyArrow(Base):
             read_kwargs={"dtype_backend": "pyarrow"},
             expected=expected,
         )
+        
+    def test_roundtrip_arrow_list_string_dtype(self, pa, temp_file):
+        import pyarrow
+
+        df = pd.DataFrame(
+            {
+                "a": pd.Series(
+                    [["a"], ["a", "b"]],
+                    dtype=pd.ArrowDtype(pyarrow.list_(pyarrow.string())),
+                )
+            }
+        )
+
+        df.to_parquet(temp_file, engine=pa)
+        result = read_parquet(temp_file, engine=pa)
+
+        tm.assert_frame_equal(result, df)
 
     @pytest.mark.parametrize(
         "columns",
