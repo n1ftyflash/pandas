@@ -8,7 +8,6 @@ else
     OUTPUT_PATH="$2"
 fi
 
-export PYTHONPATH=/app
 cd /app || exit 1
 
 case "$MODE" in
