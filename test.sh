@@ -10,6 +10,9 @@ fi
 
 cd /app || exit 1
 
+python -c "import sys; print(sys.executable); print(sys.path)"
+python -c "import pandas; print(pandas.__file__)"
+
 case "$MODE" in
     base)
         python -m pytest pandas/tests/io/test_parquet.py \
