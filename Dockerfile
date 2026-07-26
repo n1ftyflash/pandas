@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY . .
 
+RUN python -m pip install --upgrade pip
+RUN python -m pip install -e .
 RUN python -m pip install --no-cache-dir \
     "hypothesis==6.116.0" \
     "pyarrow==23.0.0"
